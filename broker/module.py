@@ -80,20 +80,19 @@ class Zerodha(Broker):
         self._login_step1()
         
         params = self._qna(self.resp.text)
+        return self._login_step2(params)
         
-        if (self._login_step2(params)):
-            return self._login_step3()
-        else:
-            return False
-    
+   
     def _login_step1(self):
-        params = dict(user_id=self.auth['user_id'], password=self.auth['password'])
+        params = dict(user_id=self.auth['user_id'], password=self.auth['password'], login='')
         
         self.resp = self.session.post(LOGIN_SUBMIT_URL,
                                       proxies = self.proxy,
                                       data = params, 
                                       headers = self.headers_normal,
                                       verify = False)
+        return self.resp.text.find('Security') >=0
+
     
     def _qna(self,txt):
         params = dict()
@@ -106,7 +105,7 @@ class Zerodha(Broker):
         params['answer1'] = self.auth[key]
         key = str(form.find_all('span')[1].contents[0])
         params['answer2'] = self.auth[key]
-        params['questions'] = ''
+        params['twofa'] = ''
         return params
     
     def _login_step2(self, params):
@@ -116,29 +115,16 @@ class Zerodha(Broker):
                                       headers = self.headers_normal,
                                       verify = False)
         self.soup = BeautifulSoup(self.resp.text, 'html.parser')
-<<<<<<< HEAD
+
         
-        
-        params = dict(password = self.auth['txn_password'])
-        self.headers_json['Referer'] = MARKET_WATCH_URL
-        self.resp = self.session.post(TXN_PASSWORD_SUBMIT_URL,
-                                    json = params, 
-=======
         return self._check_step2()
     
     def _check_step2(self):
-        return (self.resp.text.find('Positions')) > 0 
+        return (self.resp.text.find('Positions')) >= 0 
     
     def _login_step3(self):
-        self.headers_json['Referer'] = MARKET_WATCH_URL
-        self.resp = self.session.post(TXN_PASSWORD_SUBMIT_URL,
-                                    json = {"password":self.auth['txn_password']}, 
->>>>>>> a015c526feae67999486da735548fb58dc700325
-                                    headers = self.headers_json,
-                                    proxies = self.proxy,
-                                    verify = False)
-        return json.loads(self.resp.text)['data'] == True
-    
+        return True
+  
     def place_order(self, order):
         param = {
                 'disclosed_quantity': 0, 
