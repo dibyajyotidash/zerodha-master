@@ -124,21 +124,27 @@ class Zerodha(Broker):
     
     def _login_step3(self):
         return True
-  
+ 
+    def _get_order_params(self, order):
+        param = {}
+        param['disclosed_quantity'] = 0
+        param['exchange'] = order.exchange
+        param['order_type'] = Order.Type.to_str(order.type)
+        param['price'] = order.price
+        param['product'] = order.extra['product']
+        param['quantity'] = order.quantity
+        param['squareoff_value'] = 0
+        param['stoploss_value'] = 0
+        param['tradingsymbol'] = order.security
+        param['trailing_stoploss'] = 0
+        param['transaction_type'] = Order.Action.to_str(order.action)
+        param['trigger_price'] = order.stop_price
+        param['validity'] = Order.Validiy.to_str(order.validity)
+        param['variety'] = 'regular'
+        return param
+ 
     def place_order(self, order):
-        param = {
-                'disclosed_quantity': 0, 
-                'tradingsymbol': order.security,
-                'quantity': order.quantity,
-                'exchange': order.exchange,
-                'order_type': Order.Type.to_str(order.type),
-                'price': order.price,
-                'product': order.extra['product'],
-                'transaction_type': Order.Action.to_str(order.action),
-                'validity': Order.Validiy.to_str(order.validity),
-                'trigger_price': order.stop_price,
-                 }
-        
+        param = self._get_order_params(order)        
         self.resp = self.session.post(ORDER_SUBMIT_URL, 
                                       json = param, 
                                       headers = self.headers_json,
