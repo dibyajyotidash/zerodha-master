@@ -40,12 +40,12 @@ buy_id = zerodha.buy(security="SBIN-EQ",
                                 quantity=1,
                                 price=230)
 
-buy_id = zerodha.sell(security="SBIN-EQ",
+sell_id = zerodha.sell(security="SBIN-EQ",
                                 quantity = 1,
                                 price = 230)
 
-order = zerodha.get_order_info(buy_id)
-if order.state == order.State.FILLED:
+buy_order = zerodha.get_order_info(buy_id)
+if buy_order.state == order.State.FILLED:
   print("Buy exectuted")
 ```
 
@@ -56,6 +56,5 @@ To Do:
 - Integration with a broader library like Zipline to include simulation and several brokers
 - Support for Python 3
 
-Please log issues here if you find any.
+Please log issues  if you find any.
 
-site: www.xerxys.in
