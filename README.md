@@ -27,14 +27,16 @@ a_arr = [
 for r in range(0,len(q_arr)):
     auth[q_arr[r]] = a_arr[r]
 """
-  MIS- margin intraday square-off, 
-  CNC - cash (buy for delivery, sell existing shares)
+    MIS- margin intraday square-off, 
+    CNC - cash (buy for delivery, sell existing shares)
 """
 zerodha = Zerodha(auth, prefs = {'default_product' : 'MIS',})
 if zerodha.connect():
   print('Logged in to Zerodha')
 else:
   print('Check credentials')
+#Will result in 0.0 after market
+print('Current price of SBIN {}'.format(zerodha.get_current_price('SBIN')))
 #CAUTION- This will actually place orders in your zerodha account
 buy_id = zerodha.buy(security="SBIN-EQ",
                                 quantity=1,
