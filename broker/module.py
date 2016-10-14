@@ -27,7 +27,9 @@ MARKET_WATCH_URL = 'https://kite.zerodha.com/marketwatch/'
 MARKET_WATCH_API_URL = 'https://kite.zerodha.com/api/marketwatch'
 CASH_MARGIN_URL = 'https://kite.zerodha.com/api/margins'
 ORDER_CANCEL_URL = 'https://kite.zerodha.com/api/orders/'
-TIME_SERIES_URL = 'https://kite.zerodha.com/ohlc/%s/%s' #https://kite.zerodha.com/ohlc/738561/3minute
+#TIME_SERIES_URL = 'https://kite.zerodha.com/ohlc/%s/%s' #https://kite.zerodha.com/ohlc/738561/3minute
+TIME_SERIES_URL = 'https://api.kite.trade/instruments/historical/%s/%s?access_token=a&api_key=kitefront&from=%s&to=%s'
+#Time_series new url  'https://api.kite.trade/instruments/historical/738561/minute?access_token=a&api_key=kitefront&from=2016-10-06&to=2016-10-13'
 ORDER_MODIFY_URL = ORDER_CANCEL_URL
 USER_AGENT_STR = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36"
 
@@ -496,7 +498,7 @@ class Zerodha(Broker):
     def get_watch_list(self):
         self.__get_market_watch()
 
-    def get_time_series(self, stock, frequency = 'day'):
+    def get_time_series(self, stock, frequency = 'day', start=None, end=None):
         try:
             self._add_to_market_watch(stock)
         except:
@@ -509,27 +511,16 @@ class Zerodha(Broker):
             if item['tradingsymbol'] == stock:
                 stock_token = item['token']
                 break
-        
-        url = TIME_SERIES_URL%(stock_token, frequency)
+        start_str = start.strftime('%Y-%m-%d')
+        end_str = end.strftime('%Y-%m-%d')
+        url = TIME_SERIES_URL%(stock_token, frequency, start, end)
         
       
-        self.resp = self.session.get(url,
-                                     headers = self.headers_normal,
+        self.resp = requests.get(url,
                                      verify = False)
     
         txt = self.resp.text
-        txt = 'Time,Open,High,Low,Close,Volume,Unknown' + txt
-        txt = txt.replace('2014-','\n2014-')
-        txt = txt.replace('2015-','\n2015-')
-        txt = txt.replace('2016-','\n2016-')
-        try:
-            df = pd.read_csv(six.StringIO(unicode(txt)), parse_dates = [0])
-            
-            del df['Unknown']
-            return df.set_index('Time')
-        except:
-            return txt
-            
+        return json.loads(txt).get('data').get('candles')
     
     def _add_to_market_watch(self, security):
         self.__get_market_watch()
