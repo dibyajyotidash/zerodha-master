@@ -501,31 +501,19 @@ class Zerodha(Broker):
 
     @classmethod
     def get_time_series(self, stock, frequency = 'day', start=None, end=None):
-        try:
-            self._add_to_market_watch(stock)
-        except:
-            pass
-
-        self.get_watch_list();
-        stock_id = None
-        stock = stock.replace('-EQ','')
-        for item in self.m_watch_list:
-            if item['tradingsymbol'] == stock:
-                stock_token = item['token']
-                break
+        if getattr(self, 'instrument_list', None) is None:
+            self.get_instrument_list() 
         start_str = start.strftime('%Y-%m-%d')
         end_str = end.strftime('%Y-%m-%d')
+        stock_token = self.instrument_list[stock]['instrument_token']
         url = TIME_SERIES_URL%(stock_token, frequency, start, end)
-
-
-        self.resp = requests.get(url,
-                                     verify = False)
-
+        print(url)
+        self.resp = requests.get(url,verify=False)
         txt = self.resp.text
         return json.loads(txt).get('data').get('candles')
 
     @classmethod
-    def _get_instrument_list(self):
+    def get_instrument_list(self):
         self.resp = requests.get(INSTRUMENT_LIST_URL)
         self.instrument_list = {}
         headers = []
@@ -535,7 +523,10 @@ class Zerodha(Broker):
                 continue
             cells = row.split(',')
             try:
-                self.instrument_list[cells[2]] = {k:v for k,v in zip(headers,cells)}
+                 
+                d = {k.strip():v.strip() for k,v in zip(headers,cells)}
+                if d['exchange'] == 'NSE':
+                    self.instrument_list[cells[2]]=d
             except:
                 print(row)
         return self.instrument_list
