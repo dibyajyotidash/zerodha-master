@@ -29,6 +29,7 @@ CASH_MARGIN_URL = 'https://kite.zerodha.com/api/margins'
 ORDER_CANCEL_URL = 'https://kite.zerodha.com/api/orders/'
 #TIME_SERIES_URL = 'https://kite.zerodha.com/ohlc/%s/%s' #https://kite.zerodha.com/ohlc/738561/3minute
 TIME_SERIES_URL = 'https://api.kite.trade/instruments/historical/%s/%s?access_token=a&api_key=kitefront&from=%s&to=%s'
+INSTRUMENT_LIST_URL = "https://api.kite.trade/instruments?access_token=a&api_key=kitefront"
 #Time_series new url  'https://api.kite.trade/instruments/historical/738561/minute?access_token=a&api_key=kitefront&from=2016-10-06&to=2016-10-13'
 ORDER_MODIFY_URL = ORDER_CANCEL_URL
 USER_AGENT_STR = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36"
@@ -521,6 +522,17 @@ class Zerodha(Broker):
     
         txt = self.resp.text
         return json.loads(txt).get('data').get('candles')
+    
+    def _get_instrument_list(self):
+        self.resp = requests.get(INSTRUMENT_LIST_URL)
+        self.instrument_list = {}
+        headers = []
+        for row in self.resp.text.split():
+            if row.find('instrument_token')>=0:
+                headers = row.split(',')   
+                continue 
+            cells = row.split(',')
+            self.instrument_list[cells[2]] = {k:v for k,v in zip(headers,cells)}
     
     def _add_to_market_watch(self, security):
         self.__get_market_watch()
