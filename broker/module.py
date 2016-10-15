@@ -40,7 +40,7 @@ except:
     pass
 
 
-# Over-ride this if necessary 
+# Over-ride this if necessary
 Order.Type._to_str = {Order.Type.LIMIT: "LIMIT",
                     Order.Type.MARKET: "MARKET",
                     Order.Type.STOP: "SL-M",
@@ -55,7 +55,7 @@ class Zerodha(Broker):
         self.prefs = prefs
         if prefs.get('max_retries'):
             self.__max_retries = prefs['max_retries']
-            
+
         self.headers_normal = {
                                 'user-agent': USER_AGENT_STR,
                                 'Host': 'kite.zerodha.com',
@@ -78,25 +78,25 @@ class Zerodha(Broker):
                       #"http":"proxy1.wipro.com:8080"
                       }'''
         self.proxy = prefs.get('proxy')
-    def connect(self):      
-        
+    def connect(self):
+
         self._login_step1()
-        
+
         params = self._qna(self.resp.text)
         return self._login_step2(params)
-        
-   
+
+
     def _login_step1(self):
         params = dict(user_id=self.auth['user_id'], password=self.auth['password'], login='')
-        
+
         self.resp = self.session.post(LOGIN_SUBMIT_URL,
                                       proxies = self.proxy,
-                                      data = params, 
+                                      data = params,
                                       headers = self.headers_normal,
                                       verify = False)
         return self.resp.text.find('Security') >=0
 
-    
+
     def _qna(self,txt):
         params = dict()
         self.soup = BeautifulSoup(txt, 'html.parser')
@@ -110,24 +110,24 @@ class Zerodha(Broker):
         params['answer2'] = self.auth[key]
         params['twofa'] = ''
         return params
-    
+
     def _login_step2(self, params):
         self.resp = self.session.post(LOGIN_SUBMIT_URL,
                                       proxies = self.proxy,
-                                      data = params, 
+                                      data = params,
                                       headers = self.headers_normal,
                                       verify = False)
         self.soup = BeautifulSoup(self.resp.text, 'html.parser')
 
-        
+
         return self._check_step2()
-    
+
     def _check_step2(self):
-        return (self.resp.text.find('Positions')) >= 0 
-    
+        return (self.resp.text.find('Positions')) >= 0
+
     def _login_step3(self):
         return True
- 
+
     def _get_order_params(self, order):
         param = {}
         param['disclosed_quantity'] = 0
@@ -145,11 +145,11 @@ class Zerodha(Broker):
         param['validity'] = Order.Validiy.to_str(order.validity)
         param['variety'] = 'regular'
         return param
- 
+
     def place_order(self, order):
-        param = self._get_order_params(order)        
-        self.resp = self.session.post(ORDER_SUBMIT_URL, 
-                                      json = param, 
+        param = self._get_order_params(order)
+        self.resp = self.session.post(ORDER_SUBMIT_URL,
+                                      json = param,
                                       headers = self.headers_json,
                                       proxies = self.proxy,
                                       verify = False)
@@ -157,12 +157,12 @@ class Zerodha(Broker):
             return json.loads(self.resp.text)['data']['order_id']
         except KeyError:
             raise ValueError, json.loads(self.resp.text)['message'] + "\n" + str(param)
-    
-    # precision of pricing at NSE is 0.05          
+
+    # precision of pricing at NSE is 0.05
     @classmethod
     def __round_5(cls,num):
         return (100*round(num,2) - 100*round(num,2) % 5)/100
-    
+
     # buy stocks for delivery (default exchange is set NSE for Zerodha)
     def buy_cash(self,
                 security,
@@ -185,8 +185,8 @@ class Zerodha(Broker):
                                     exchange = exchange,
                                     fill_strategy = "",
                                     extra = extra)
-        return self.place_order(order)        
-    
+        return self.place_order(order)
+
     def sell_cash(self,
                 security,
                 quantity,
@@ -194,7 +194,7 @@ class Zerodha(Broker):
                 stop_price = 0,
                 fill_strategy = "",
                 exchange = 'NSE'):
-                    
+
         extra = {'product':'CNC'}
         if exchange in ['NSE','NFO']:
             price = Zerodha.__round_5(price)
@@ -209,8 +209,8 @@ class Zerodha(Broker):
                                     exchange = exchange,
                                     fill_strategy = "",
                                     extra = extra)
-        return self.place_order(order)            
-    
+        return self.place_order(order)
+
     #currently supports only NSE exchange all security including fno
     def buy_margin(self,
                 security,
@@ -220,7 +220,7 @@ class Zerodha(Broker):
                 fill_strategy = "",
                 exchange = 'NSE'):
         #Zerodha uses NSE and NFO as exchange field to distinguish stock and FnO
-        #All stock symbols have -EQ suffix which can be used to decide whether to 
+        #All stock symbols have -EQ suffix which can be used to decide whether to
         #select NSE or NFO when user selects NSE
         if exchange == 'NSE' and not security.find('-EQ') >= 0:
             exchange = "NFO"
@@ -238,8 +238,8 @@ class Zerodha(Broker):
                                     exchange = exchange,
                                     fill_strategy = "",
                                     extra = extra)
-        return self.place_order(order)            
-    
+        return self.place_order(order)
+
     #currently supports only NSE exchange all security including fno
     def sell_margin(self,
                 security,
@@ -249,7 +249,7 @@ class Zerodha(Broker):
                 fill_strategy = "",
                 exchange = 'NSE'):
         #Zerodha uses NSE and NFO as exchange field to distinguish stock and FnO
-        #All stock symbols have -EQ suffix which can be used to decide whether to 
+        #All stock symbols have -EQ suffix which can be used to decide whether to
         #select NSE or NFO when user selects NSE
         if exchange == 'NSE' and not security.find('-EQ') >= 0:
             exchange = "NFO"
@@ -291,7 +291,7 @@ class Zerodha(Broker):
                                     fill_strategy = "",
                                     extra = extra)
         return self.place_order(order)
-    
+
     def sell_fno(self,
                 security,
                 quantity,
@@ -313,8 +313,8 @@ class Zerodha(Broker):
                                     exchange = exchange,
                                     fill_strategy = "",
                                     extra = extra)
-        return self.place_order(order)                        
-    
+        return self.place_order(order)
+
     def buy(self,
                 security,
                 quantity,
@@ -322,17 +322,17 @@ class Zerodha(Broker):
                 stop_price = 0,
                 fill_strategy = "",
                 exchange = 'NSE'):
-        
+
         if exchange == 'NSE' and not security.find('-EQ') >= 0:
             exchange = "NFO"
-        
+
         if self.prefs['default_product'] == 'MIS':
             extra = {'product': 'MIS'}
         elif exchange == 'NFO':
             extra = {'product': 'NRML'}
         else:
             extra = {'product': 'CNC'}
-        
+
         if exchange in ['NSE','NFO']:
             price = Zerodha.__round_5(price)
             stop_price = Zerodha.__round_5(stop_price)
@@ -346,7 +346,7 @@ class Zerodha(Broker):
                                     exchange = exchange,
                                     fill_strategy = "",
                                     extra = extra)
-        return self.place_order(order)                        
+        return self.place_order(order)
 
     def sell(self,
                 security,
@@ -355,17 +355,17 @@ class Zerodha(Broker):
                 stop_price = 0,
                 fill_strategy = "",
                 exchange = 'NSE'):
-        
+
         if exchange == 'NSE' and not security.find('-EQ') >= 0:
             exchange = "NFO"
-        
+
         if self.prefs['default_product'] == 'MIS':
             extra = {'product': 'MIS'}
         elif exchange == 'NFO':
             extra = {'product': 'NRML'}
         else:
             extra = {'product': 'CNC'}
-        
+
         if exchange in ['NSE','NFO']:
             price = Zerodha.__round_5(price)
             stop_price = Zerodha.__round_5(stop_price)
@@ -380,7 +380,7 @@ class Zerodha(Broker):
                                     fill_strategy = "",
                                     extra = extra)
         return self.place_order(order)
-    
+
     def modify_order(self, order_id,
                     quantity,
                     price = 0,
@@ -391,7 +391,7 @@ class Zerodha(Broker):
         order.price = price
         order.stop_price = stop_price
         param = {
-                'disclosed_quantity': 0, 
+                'disclosed_quantity': 0,
                 'tradingsymbol': order.security,
                 'quantity': order.quantity,
                 'exchange': order.exchange,
@@ -402,7 +402,7 @@ class Zerodha(Broker):
                 'validity': Order.Validiy.to_str(order.validity),
                 'trigger_price': order.stop_price,
                  }
-        
+
         self.resp = self.session.post(ORDER_MODIFY_URL + order_id,
                                     json = param, headers = self.headers_json,
                                     verify = False)
@@ -410,35 +410,35 @@ class Zerodha(Broker):
             return json.loads(self.resp.text)['data']['order_id']
         except KeyError:
             raise ValueError, json.loads(self.resp.text)['message'] + "\n" + str(param)
-        
+
     def cancel_order(self,order_id):
         cancel_url = ORDER_CANCEL_URL + order_id
-        self.resp = self.session.delete(cancel_url, 
+        self.resp = self.session.delete(cancel_url,
                                    headers = self.headers_json,
                                    verify = False)
         return json.loads(self.resp.text)['message'] == "success"
-    
+
     def get_order_status(self,order_id):
         return self.get_order_info(order_id).state
-    
-        
+
+
     def get_open_orders(self):
         self.resp = self.session.get(ORDER_SUBMIT_URL,
                                       headers = self.headers_json,
                                       verify = False)
         json_text = str(self.resp.text).replace('null','""')
-        
+
         try:
             zorders = json.loads(json_text)['data']
-            
+
         except KeyError:
             raise ValueError,json.loads(json_text)['message']
-        
+
         orders = []
         for zorder in zorders:
             orders.append(self._zorder_to_order(zorder))
         return orders
-    
+
     def __type_str_to_num(self, type_str):
         if type_str == 'MARKET':
             order_type = Order.Type.MARKET
@@ -448,14 +448,14 @@ class Zerodha(Broker):
             order_type = Order.Type.STOP_LIMIT
         else: order_type = Order.Type.STOP
         return order_type
-                   
+
     def __status_str_to_num(self, status_str):
         str_to_num = {'PENDING': Order.State.SUBMITTED,
                       'TRIGGER PENDING': Order.State.SUBMITTED,
                      'OPEN': Order.State.ACCEPTED,
                      'REJECTED': Order.State.REJECTED,
                      'CANCELLED': Order.State.CANCELED,
-                     'COMPLETE': Order.State.FILLED,                     
+                     'COMPLETE': Order.State.FILLED,
                      }
         if not str_to_num.get(status_str): print status_str
         return str_to_num.get(status_str)
@@ -482,29 +482,30 @@ class Zerodha(Broker):
         if zorder['exchange_timestamp']:
             o.submit_datetime = datetime.datetime.strptime(zorder['exchange_timestamp'],"%Y-%m-%d %H:%M:%S")
         return o
-    
+
     def get_order_info(self, order_id):
         orders = self.get_open_orders()
         for order in orders:
             if order.id == order_id:
                 return order
-                
+
     def __get_market_watch(self):
         self.resp = self.session.get(MARKET_WATCH_API_URL,
                                      headers = self.headers_json, verify = False)
         m_watch = json.loads(self.resp.text.replace('null','""'))['data'][0]
         self.m_watch_id = m_watch['id']
         self.m_watch_list = m_watch['items']
-   
+
     def get_watch_list(self):
         self.__get_market_watch()
 
+    @classmethod
     def get_time_series(self, stock, frequency = 'day', start=None, end=None):
         try:
             self._add_to_market_watch(stock)
         except:
             pass
-        
+
         self.get_watch_list();
         stock_id = None
         stock = stock.replace('-EQ','')
@@ -515,28 +516,34 @@ class Zerodha(Broker):
         start_str = start.strftime('%Y-%m-%d')
         end_str = end.strftime('%Y-%m-%d')
         url = TIME_SERIES_URL%(stock_token, frequency, start, end)
-        
-      
+
+
         self.resp = requests.get(url,
                                      verify = False)
-    
+
         txt = self.resp.text
         return json.loads(txt).get('data').get('candles')
-    
+
+    @classmethod
     def _get_instrument_list(self):
         self.resp = requests.get(INSTRUMENT_LIST_URL)
         self.instrument_list = {}
         headers = []
-        for row in self.resp.text.split():
+        for row in self.resp.text.split('\n'):
             if row.find('instrument_token')>=0:
-                headers = row.split(',')   
-                continue 
+                headers = row.split(',')
+                continue
             cells = row.split(',')
-            self.instrument_list[cells[2]] = {k:v for k,v in zip(headers,cells)}
-    
+            try:
+                self.instrument_list[cells[2]] = {k:v for k,v in zip(headers,cells)}
+            except:
+                print(row)
+        return self.instrument_list
+
+
     def _add_to_market_watch(self, security):
         self.__get_market_watch()
-        l = len(self.m_watch_list) 
+        l = len(self.m_watch_list)
         url = MARKET_WATCH_API_URL + '/' + str(self.m_watch_id) + '/items'
         param = {}
         if security.find('-EQ') > 0:
@@ -550,7 +557,7 @@ class Zerodha(Broker):
                                      headers = self.headers_json)
         return self.resp.text
         #return json.loads(self.resp.text.replace('null','""'))['message'] == 'success'
-                            
+
     def _remove_from_market_watch(self, security):
         self.__get_market_watch()
         stock_token = None
@@ -560,13 +567,13 @@ class Zerodha(Broker):
                 stock_token = item['id']
                 break
         if stock_token == None:
-            return                
+            return
         url = MARKET_WATCH_API_URL + '/' + str(self.m_watch_id) + '/' + str(stock_token)
-        self.resp = self.session.delete(url, 
+        self.resp = self.session.delete(url,
                                    headers = self.headers_json)
-    
+
         return json.loads(self.resp.text)['message'] == "success"
-        
+
     def get_current_price(self, security):
         self.__get_market_watch()
         for item in self.m_watch_list:
@@ -574,21 +581,21 @@ class Zerodha(Broker):
                 return item['last_price']
         self._add_to_market_watch(security)
         return self.get_current_price( security)
-    
+
     def get_cash(self):
         self.resp = self.session.get(CASH_MARGIN_URL,
                                      headers = self.headers_json)
         jresp = json.loads(self.resp.text)
         if jresp['message'] != "success": raise ValueError, jresp['message']
         return jresp['data']['equity']['available']['cash']
-    
+
     def get_margin_available(self):
         self.resp = self.session.get(CASH_MARGIN_URL,
                                      headers = self.headers_json)
         jresp = json.loads(self.resp.text)
         if jresp['message'] != "success": raise ValueError, jresp['message']
         return jresp['data']['equity']['available']['adhoc_margin']
-    
+
     @classmethod
     def estimate_intraday_cost(cls, price, quantity, action = 'BUY'):
         if price * quantity * 0.1/100 > 20:
@@ -599,4 +606,4 @@ class Zerodha(Broker):
         service_tax = 14.0 * (brokerage + stt) / 100.0
         sebi_charge = 20 / 1000000 * price * quantity
         return brokerage + stt + turnover_charge + service_tax + sebi_charge
-        
+
