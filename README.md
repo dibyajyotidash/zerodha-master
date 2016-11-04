@@ -1,19 +1,21 @@
 # zerodha
-Automation of zerodha for HFT (currently tested with Python2.7)
+*Wrapper around kiteconnect*
+**Installation**
+```
+git clone https://github.com/swapniljariwala/zerodha.git
+cd zerodha
+python setup.py install
+```
+**Usage**
 ```python
-from broker.module import Zerodha, Order
-auth = dict()
-auth['user_id'] = 'UDI'
-auth['password'] = 'PASS1'
-auth['txn_password'] = 'PASS2'
-#question array
+from kitewrapper import KiteFront
 q_arr = [
-    'What was the name of the college from which you graduated? (e.g. Xavier, Symbosis etc)',
-    'Which year did you complete your graduation? (e.g. 2000, 1990 etc)',
-    "What is your mother's name?",
-    'Which floor of the building do you live on?',
-    'What is your height in feet? (e.g. 5.4 4.8 etc)',
-    'What is you birth place?',
+    'question1',
+    'question2',
+    "question3",
+    'question4',
+    'question5',
+    'question6',
     ]
 #answer array
 a_arr = [
@@ -24,8 +26,50 @@ a_arr = [
     "ans5",
     "ans6"
     ]
-for r in range(0,len(q_arr)):
-    auth[q_arr[r]] = a_arr[r]
+auth={k:v for k,v in zip(q_arr,a_arr)}
+auth['user_id'] = 'UDI'
+auth['password'] = 'PASS1'
+auth['txn_password'] = 'PASS2'
+k = KiteFront(auth=auth)
+h = k.holdings()
+```
+Limited functionality from [kiteconnect](https://kite.trade/docs/pykiteconnect/) is supported
+Supported methods-
+* holdings
+* margins
+* orders
+* positions
+* trades
+* order_place [not tested]
+* order_modify [not tested]
+* order_cancel [not tested]
+
+**old way** Automation of zerodha for HFT (currently tested with Python2.7)
+```python
+from broker.module import Zerodha, Order
+#question array
+q_arr = [
+    'question1',
+    'question2',
+    "question3",
+    'question4',
+    'question5',
+    'question6',
+    ]
+#answer array
+a_arr = [
+    "ans1",
+    "ans2",
+    "ans3",
+    "ans4",
+    "ans5",
+    "ans6"
+    ]
+auth={k:v for k,v in zip(q_arr,a_arr)}
+auth['user_id'] = 'UDI'
+auth['password'] = 'PASS1'
+auth['txn_password'] = 'PASS2'
+
 """
     MIS- margin intraday square-off, 
     CNC - cash (buy for delivery, sell existing shares)
