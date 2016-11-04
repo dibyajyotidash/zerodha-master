@@ -34,7 +34,8 @@ auth['txn_password'] = 'PASS2'
 k = KiteFront(auth=auth)
 h = k.holdings()
 ```
-Limited functionality from [kiteconnect](https://kite.trade/docs/pykiteconnect/) is supported
+Only limited functionality from [kiteconnect](https://kite.trade/docs/pykiteconnect/) is supported
+
 Supported methods-
 * holdings
 * margins
