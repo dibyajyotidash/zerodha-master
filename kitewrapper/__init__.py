@@ -135,6 +135,17 @@ class KiteFront(KiteConnect):
         del (params["self"])
         return self._post("orders.place", params)["order_id"]
     
+    def instruments(self, exchange=None):
+        """
+        Retrieve the list of market instruments available to trade.
+        Note that the results could be large, several hundred KBs in size,
+        with tens of thousands of entries in the list.
+        """
+        if not exchange:
+            url = self._routes["market.instruments.all"]
+        else:
+            url = self._routes["market.instruments"].format(exchange=exchange)
+        return self._parse_csv(requests.get(url).content)
 
     
 
