@@ -30,7 +30,6 @@ a_arr = [
 auth={k:v for k,v in zip(q_arr,a_arr)}
 auth['user_id'] = 'UDI'
 auth['password'] = 'PASS1'
-auth['txn_password'] = 'PASS2'
 k = KiteFront(auth=auth)
 h = k.holdings()
 ```
