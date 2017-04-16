@@ -31,6 +31,7 @@ auth={k:v for k,v in zip(q_arr,a_arr)}
 auth['user_id'] = 'UDI'
 auth['password'] = 'PASS1'
 k = KiteFront(auth=auth)
+k.connect()
 h = k.holdings()
 ```
 Only limited functionality from [kiteconnect](https://kite.trade/docs/pykiteconnect/) is supported
