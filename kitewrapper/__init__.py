@@ -133,6 +133,14 @@ class KiteFront(KiteConnect):
         """Place an order."""
         params = locals()
         del (params["self"])
+        params['client_id'] = self._auth['user_id']
+        params['price'] = str(price)
+        params['disclosed_quantity'] = str(disclosed_quantity)
+        params['trigger_price'] = str(trigger_price)
+        params['squareoff_value'] = str(squareoff_value)
+        params['stoploss_value'] = str(stoploss_value)
+        params['trailing_stoploss'] = str(trailing_stoploss)
+        params['quantity'] = str(quantity)
         return self._post("orders.place", params)["order_id"]
     
 
