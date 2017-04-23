@@ -142,9 +142,37 @@ class KiteFront(KiteConnect):
         params['trailing_stoploss'] = str(trailing_stoploss)
         params['quantity'] = str(quantity)
         return self._post("orders.place", params)["order_id"]
-    
 
+    def order_modify(self,
+                        order_id,
+                        exchange=None,
+                        tradingsymbol=None,
+                        transaction_type=None,
+                        quantity=None,
+                        price=None,
+                        order_type=None,
+                        product=None,
+                        trigger_price=0, validity='DAY', disclosed_quantity=0, variety='regular'): 
+        
+        order_stat = self.orders(order_id=order_id)[0]
+        params = locals()
+        del (params["self"])
+        del (params['order_stat'])
+        params['client_id'] = self._auth['user_id']
+        params['exchange'] = exchange if exchange else order_stat['exchange']
+        params['transaction_type'] = transaction_type if transaction_type else order_stat['transaction_type']
+        params['quantity'] = str(quantity) if quantity else str(order_stat['quantity'])
+        params['price'] = str(price) if price else str(order_stat['price'])
+        params['order_type'] = order_type if order_type else order_stat['order_type']
+        params['product'] = product if product else order_stat['product']
+        params['trigger_price'] = str(trigger_price) if trigger_price else str(order_stat['trigger_price'])
+        params['validity'] = validity if validity else order_stat['validity']
+        params['disclosed_quantity'] = str(disclosed_quantity) if disclosed_quantity else str(order_stat['disclosed_quantity'])
+
+        return self._put("orders.modify", params)["order_id"]
     
+    def zsession(self):
+        return self._get("session")
 
     def _request(self, route, method, parameters=None):
         """Make an HTTP request."""
